@@ -22,12 +22,12 @@ class Command(BaseCommand):
         # Create activities
         for activity_data in test_activities:
             user = User.objects.get(username=activity_data['user'])
-            Activity.objects.create(user=user.username, activity_type=activity_data['activity'], duration=activity_data['duration'])
+            Activity.objects.create(user=user, activity_type=activity_data['activity'], duration=activity_data['duration'])
 
         # Create leaderboard entries
         for leaderboard_data in test_leaderboard:
             user = User.objects.get(username=leaderboard_data['user'])
-            Leaderboard.objects.create(user=user.username, score=leaderboard_data['points'])
+            Leaderboard.objects.create(user=user, score=leaderboard_data['points'])
 
         # Create workouts
         for workout_data in test_workouts:
