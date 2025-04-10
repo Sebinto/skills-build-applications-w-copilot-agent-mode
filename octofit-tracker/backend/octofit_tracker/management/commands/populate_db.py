@@ -1,49 +1,36 @@
 from django.core.management.base import BaseCommand
-from octofit_tracker.models import User, Team, Activity, Leaderboard, Workout
+from octofit_tracker.test_data import test_users, test_teams, test_activities, test_leaderboard, test_workouts
+from django.contrib.auth.models import User
+from octofit_tracker.models import Team, Activity, Leaderboard, Workout
+
+# Correction du champ 'points' en 'score' pour le modèle Leaderboard
 
 class Command(BaseCommand):
     help = 'Populate the database with test data'
 
     def handle(self, *args, **kwargs):
-        # Clear existing data
-        User.objects.all().delete()
-        Team.objects.all().delete()
-        Activity.objects.all().delete()
-        Leaderboard.objects.all().delete()
-        Workout.objects.all().delete()
+        # Create users
+        existing_usernames = set(User.objects.values_list('username', flat=True))
+        for user_data in test_users:
+            if user_data['username'] not in existing_usernames:
+                User.objects.create_user(**user_data)
 
-        # Add test users
-        users = [
-            User(email='john.doe@example.com', name='John Doe', age=25),
-            User(email='jane.smith@example.com', name='Jane Smith', age=30),
-        ]
-        User.objects.bulk_create(users)
+        # Create teams
+        for team_data in test_teams:
+            Team.objects.create(name=team_data['name'], members=team_data['members'])
 
-        # Add test teams
-        teams = [
-            Team(name='Team Alpha', members=['john.doe@example.com', 'jane.smith@example.com']),
-        ]
-        Team.objects.bulk_create(teams)
+        # Create activities
+        for activity_data in test_activities:
+            user = User.objects.get(username=activity_data['user'])
+            Activity.objects.create(user=user.username, activity_type=activity_data['activity'], duration=activity_data['duration'])
 
-        # Add test activities
-        activities = [
-            Activity(user='john.doe@example.com', activity_type='Running', duration=30),
-            Activity(user='jane.smith@example.com', activity_type='Cycling', duration=45),
-        ]
-        Activity.objects.bulk_create(activities)
+        # Create leaderboard entries
+        for leaderboard_data in test_leaderboard:
+            user = User.objects.get(username=leaderboard_data['user'])
+            Leaderboard.objects.create(user=user.username, score=leaderboard_data['points'])
 
-        # Add test leaderboard entries
-        leaderboard = [
-            Leaderboard(user='john.doe@example.com', score=100),
-            Leaderboard(user='jane.smith@example.com', score=150),
-        ]
-        Leaderboard.objects.bulk_create(leaderboard)
+        # Create workouts
+        for workout_data in test_workouts:
+            Workout.objects.create(**workout_data)
 
-        # Add test workouts
-        workouts = [
-            Workout(name='Morning Run', description='A quick 5km run to start the day'),
-            Workout(name='Evening Yoga', description='Relaxing yoga session to end the day'),
-        ]
-        Workout.objects.bulk_create(workouts)
-
-        self.stdout.write(self.style.SUCCESS('Database populated with test data'))
+        self.stdout.write(self.style.SUCCESS('Database populated with test data.'))
